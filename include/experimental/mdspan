@@ -49,6 +49,7 @@
 #include "__p0009_bits/dynamic_extent.hpp"
 #include "__p0009_bits/extents.hpp"
 #include "__p0009_bits/layout_stride.hpp"
+#include "__p0009_bits/layout_padded_general.hpp"
 #include "__p0009_bits/layout_left.hpp"
 #include "__p0009_bits/layout_right.hpp"
 #include "__p0009_bits/macros.hpp"

@@ -50,6 +50,7 @@
 #include "layout_left.hpp"
 #include "layout_right.hpp"
 #include "layout_stride.hpp"
+#include "layout_padded_general.hpp"
 #include "macros.hpp"
 #include "trait_backports.hpp"
 
@@ -154,6 +155,43 @@ struct preserve_layout_left_analysis : integral_constant<bool, result> {
   >;
 };
 
+// a layout_padded_general follows the same preservation rules as layout_left/right
+template <
+  typename ElementType,
+  bool RowMajorC,
+  size_t AlignmentBytes,
+  bool result=true,
+  bool encountered_only_scalar=true,
+  bool encountered_only_all=true
+>
+struct preserve_layout_padded_general_analysis : integral_constant<bool, result> {
+  using layout_type_if_preserved = layout_padded_general<ElementType, RowMajorC, AlignmentBytes>;
+  using encounter_pair = preserve_layout_padded_general_analysis<
+    ElementType,
+    RowMajorC,
+    AlignmentBytes,
+    RowMajorC ? result && encountered_only_scalar : result && encountered_only_all,
+    false,
+    false
+  >;
+  using encounter_all = preserve_layout_padded_general_analysis<
+    ElementType,
+    RowMajorC,
+    AlignmentBytes,
+    RowMajorC ? result : result && encountered_only_all,
+    false,
+    encountered_only_all
+  >;
+  using encounter_scalar = preserve_layout_padded_general_analysis<
+    ElementType,
+    RowMajorC,
+    AlignmentBytes,
+    RowMajorC ? result && encountered_only_scalar : result,
+    encountered_only_scalar,
+    false
+  >;
+};
+
 struct ignore_layout_preservation : std::integral_constant<bool, false> {
   using layout_type_if_preserved = void;
   using encounter_pair = ignore_layout_preservation;
@@ -170,6 +208,9 @@ struct preserve_layout_analysis<layout_right>
 template <>
 struct preserve_layout_analysis<layout_left>
   : preserve_layout_left_analysis<> { };
+template<typename ElementType, bool RowMajorC, size_t ByteAlignment>
+struct preserve_layout_analysis<layout_padded_general<ElementType,RowMajorC,ByteAlignment>>
+  : preserve_layout_padded_general_analysis<ElementType,RowMajorC,ByteAlignment> { };
 
 //--------------------------------------------------------------------------------
 
@@ -450,6 +491,11 @@ template <class T> struct _is_layout_stride : std::false_type { };
 template<>
 struct _is_layout_stride<
   layout_stride
+> : std::true_type
+{ };
+template<typename ElementType, bool RowMajorC, size_t ByteAlignment>
+struct _is_layout_stride<
+  layout_padded_general<ElementType, RowMajorC, ByteAlignment>
 > : std::true_type
 { };
 
