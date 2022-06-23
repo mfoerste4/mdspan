@@ -157,36 +157,36 @@ struct preserve_layout_left_analysis : integral_constant<bool, result> {
 
 // a layout_padded_general follows the same preservation rules as layout_left/right
 template <
-  typename ElementType,
-  bool RowMajorC,
+  typename ValueType,
+  StorageOrderType StorageOrder,
   size_t AlignmentBytes,
   bool result=true,
   bool encountered_only_scalar=true,
   bool encountered_only_all=true
 >
 struct preserve_layout_padded_general_analysis : integral_constant<bool, result> {
-  using layout_type_if_preserved = layout_padded_general<ElementType, RowMajorC, AlignmentBytes>;
+  using layout_type_if_preserved = layout_padded_general<ValueType, StorageOrder, AlignmentBytes>;
   using encounter_pair = preserve_layout_padded_general_analysis<
-    ElementType,
-    RowMajorC,
+    ValueType,
+    StorageOrder,
     AlignmentBytes,
-    RowMajorC ? result && encountered_only_scalar : result && encountered_only_all,
+    StorageOrder == StorageOrderType::row_major_t ? result && encountered_only_scalar : result && encountered_only_all,
     false,
     false
   >;
   using encounter_all = preserve_layout_padded_general_analysis<
-    ElementType,
-    RowMajorC,
+    ValueType,
+    StorageOrder,
     AlignmentBytes,
-    RowMajorC ? result : result && encountered_only_all,
+    StorageOrder == StorageOrderType::row_major_t ? result : result && encountered_only_all,
     false,
     encountered_only_all
   >;
   using encounter_scalar = preserve_layout_padded_general_analysis<
-    ElementType,
-    RowMajorC,
+    ValueType,
+    StorageOrder,
     AlignmentBytes,
-    RowMajorC ? result && encountered_only_scalar : result,
+    StorageOrder == StorageOrderType::row_major_t ? result && encountered_only_scalar : result,
     encountered_only_scalar,
     false
   >;
@@ -208,9 +208,9 @@ struct preserve_layout_analysis<layout_right>
 template <>
 struct preserve_layout_analysis<layout_left>
   : preserve_layout_left_analysis<> { };
-template<typename ElementType, bool RowMajorC, size_t ByteAlignment>
-struct preserve_layout_analysis<layout_padded_general<ElementType,RowMajorC,ByteAlignment>>
-  : preserve_layout_padded_general_analysis<ElementType,RowMajorC,ByteAlignment> { };
+template<typename ValueType, StorageOrderType StorageOrder, size_t ByteAlignment>
+struct preserve_layout_analysis<layout_padded_general<ValueType,StorageOrder,ByteAlignment>>
+  : preserve_layout_padded_general_analysis<ValueType,StorageOrder,ByteAlignment> { };
 
 //--------------------------------------------------------------------------------
 
@@ -493,9 +493,9 @@ struct _is_layout_stride<
   layout_stride
 > : std::true_type
 { };
-template<typename ElementType, bool RowMajorC, size_t ByteAlignment>
+template<typename ValueType, StorageOrderType StorageOrder, size_t ByteAlignment>
 struct _is_layout_stride<
-  layout_padded_general<ElementType, RowMajorC, ByteAlignment>
+  layout_padded_general<ValueType, StorageOrder, ByteAlignment>
 > : std::true_type
 { };
 
